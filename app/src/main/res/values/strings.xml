@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MovesSample</string>
+    <string name="title_activity_maps">MovesMap</string>
+</resources>
