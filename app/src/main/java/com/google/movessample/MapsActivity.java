@@ -7,6 +7,9 @@ import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,35 +25,76 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.karumi.dexter.listener.single.PermissionListener;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.TextHttpResponseHandler;
 
-import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import cz.msebera.android.httpclient.Header;
 import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.SmartLocation;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    TextView location;
+    TextView location, device_time;
+    EditText search_location;
+    Button btn_go;
 
+    // Date currentTime = Calendar.getInstance().getTime();
+    // String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
+
+    Calendar calender = Calendar.getInstance();
+    SimpleDateFormat mdformat = new SimpleDateFormat("HH:mm:ss");
+    String strDate = "Current Time : " + mdformat.format(calender.getTime());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        // Obtain the SupportMapFragment and get notified when the night is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         location = findViewById(R.id.location);
+        search_location = findViewById(R.id.search_location);
+        btn_go = findViewById(R.id.btn_go);
+        device_time = findViewById(R.id.device_time);
+        // time.setText(mydate);
+        device_time.setText(strDate);
 
+        btn_go.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String value = search_location.getText().toString().trim();
+                searchLocation(value);
+            }
+        });
+    }
+
+    private void searchLocation(String value) {
+        String url = "http://maps.googleapis.com/maps/api/geocode/json? apikey=AIzaSyCh7SEIsFmhVUhHrPqR5pNAZOx91jo-k2k&address=" + value;
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(url, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                showLocationOnMAp(responseString);
+            }
+        });
+
+    }
+
+    private void showLocationOnMAp(String responseString) {
     }
 
     @Override
@@ -58,12 +102,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
-        try {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
 
-        } catch (Exception e) {
+          //  mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
 
-        }
         getPermissions();
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
@@ -71,8 +113,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onCameraIdle() {
                 double lat = mMap.getCameraPosition().target.latitude;
                 double lon = mMap.getCameraPosition().target.longitude;
-            //    location.setText(lat + " " + lon);
-                location.setText(getCompleteAddressString(lat,lon));
+                //    location.setText(lat + " " + lon);
+                location.setText(getCompleteAddressString(lat, lon));
             }
         });
 
@@ -98,7 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         Marker sample = mMap.addMarker(new MarkerOptions()
                                 .position(b)
-                                .title("b")
+                                .title("You are here")
                                 .rotation(90)
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
                     }
@@ -145,10 +187,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.w("My Current location ", "Canont get Address!");
+            Log.w("My Current location ", "Cant get Address!");
         }
         return strAdd;
+
+
+
+
     }
+
+
 
 
 }

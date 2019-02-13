@@ -23,14 +23,53 @@
 
         />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:layout_alignParentBottom="true"
-        android:background="#fff"
-        android:gravity="center"
-        android:id="@+id/location"
 
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/search_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter your location"
+
+            />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_go"
+            android:text="Go"
+            />
+
+        <TextView
+            android:background="#fff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/device_time"
+            />
+
+        <TextView
+            android:background="#fff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/region_time"
+            android:layout_marginTop="5dp"
+            />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/location"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:background="#40ffffff"
+        android:gravity="center"
+        android:textColor="#000000"
         />
 
 
