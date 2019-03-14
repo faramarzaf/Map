@@ -2,6 +2,7 @@ package com.google.movessample;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -52,7 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     TextView location, device_time, region_time;
     EditText search_location;
     Button btn_go;
-    ImageButton nightMood, dayMood;
+    ImageView nightMood, dayMood;
 
     // Date currentTime = Calendar.getInstance().getTime();
     // String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
@@ -95,20 +96,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.nightMood:
-
-                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
-                break;
-            case R.id.dayMood:
-
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
+                search_location.setHintTextColor(Color.rgb(255,255,255));
+                break;
+
+            case R.id.dayMood:
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
+                search_location.setHintTextColor(Color.rgb(0,0,0));
                 break;
         }
 
 
     }
-        // night mood actions here
+    // night mood actions here
     /*    if (v.getId() == nightMood.getId()) {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
             fade();
@@ -273,7 +275,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         region_time.setText(regTime);
 
     }
-
 
 
 }
