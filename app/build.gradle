@@ -16,6 +16,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    tasks.whenTaskAdded { task ->
+        if (task.name.equals("lint")) {
+            task.enabled = false
+        }
+    }
 }
 
 dependencies {
@@ -30,5 +35,8 @@ dependencies {
     implementation 'com.karumi:dexter:5.0.0'
     implementation 'io.nlopez.smartlocation:rx:3.3.3'
     implementation'com.loopj.android:android-async-http:1.4.9'
+
+    implementation 'com.google.code.gson:gson:2.8.5'
+
 
 }
