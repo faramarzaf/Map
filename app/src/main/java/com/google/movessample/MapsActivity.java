@@ -9,11 +9,9 @@ import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +27,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.movessample.models.MyModel;
+import com.google.movessample.models.OpenWeatherMapModel;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -50,7 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
 
-    TextView location, device_time, region_time;
+    TextView location, device_time, region_time,region_temp;
     EditText search_location;
     Button btn_go;
     ImageView nightMood, dayMood;
@@ -78,6 +77,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         region_time = findViewById(R.id.region_time);
         nightMood = findViewById(R.id.nightMood);
         dayMood = findViewById(R.id.dayMood);
+        region_temp = findViewById(R.id.region_temp);
         // time.setText(mydate);
         device_time.setText(strDate);
 
@@ -99,12 +99,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         switch (v.getId()) {
             case R.id.nightMood:
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
-                search_location.setHintTextColor(Color.rgb(255,255,255));
+                search_location.setHintTextColor(Color.rgb(255, 255, 255));
                 break;
 
             case R.id.dayMood:
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
-                search_location.setHintTextColor(Color.rgb(0,0,0));
+                search_location.setHintTextColor(Color.rgb(0, 0, 0));
                 break;
         }
 
@@ -168,6 +168,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //    location.setText(lat + " " + lon);
                 location.setText(getCompleteAddressString(lat, lon));
                 setRegionTime(lat, lon);
+                showTemp(lat,lon);
             }
         });
 
@@ -274,6 +275,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String regTime = myModel.getTimeZone().getCurrentTime();
         region_time.setText(regTime);
 
+    }
+
+    //https://api.openweathermap.org/data/2.5/weather?lat=40&lon=50&appid=a5f06f7985166354304befe85a386554
+
+    private void showTemp(final double lat , double lon) {
+        String url = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid=a5f06f7985166354304befe85a386554";
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(url, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+             Toast.makeText(MapsActivity.this, "Data Not Found !", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                parseData(responseString);
+            }
+        });
+
+    }
+
+    private void parseData(String response) {
+        Gson gson = new Gson();
+        OpenWeatherMapModel openWeatherMapModel = gson.fromJson(response, OpenWeatherMapModel.class);
+        Double TempKlv = openWeatherMapModel.getMain().getTemp();
+        Double TempC = (TempKlv) - 273.15;
+        String TempC2 = String.format("%.0f", TempC);
+        region_temp.setText("Here is "+TempC2+" °C");
     }
 
 
