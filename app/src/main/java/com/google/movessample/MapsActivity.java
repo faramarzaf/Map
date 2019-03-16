@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.movessample.addressModels.AddressModel;
 import com.google.movessample.models.MyModel;
 import com.google.movessample.models.OpenWeatherMapModel;
 import com.karumi.dexter.Dexter;
@@ -54,6 +56,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_go;
     ImageView nightMood, dayMood;
 
+    // api key for getting  lat lon address  =https://api.opencagedata.com/geocode/v1/json?q=PLACENAME&key=3b4c0949431646d2a72538c0bc1c6d07
+
     // Date currentTime = Calendar.getInstance().getTime();
     // String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
 
@@ -78,10 +82,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         nightMood = findViewById(R.id.nightMood);
         dayMood = findViewById(R.id.dayMood);
         region_temp = findViewById(R.id.region_temp);
-        // time.setText(mydate);
         device_time.setText(strDate);
-
-
+        getPermissions();
         btn_go.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,27 +112,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
-    // night mood actions here
-    /*    if (v.getId() == nightMood.getId()) {
-            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
-            fade();
-
-        } else if (v.getId() == dayMood.getId()) {
-            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
-            fade();
-
-        }*/
-
-
-   /* private void fade() {
-        nightMood.animate().alpha(1f - nightMood.getAlpha()).setDuration(5);
-        dayMood.animate().alpha(1f - dayMood.getAlpha()).setDuration(5);
-
-    }
-*/
 
     private void searchLocation(String value) {
-        String url = "http://maps.googleapis.com/maps/api/geocode/json? apikey=AIzaSyCh7SEIsFmhVUhHrPqR5pNAZOx91jo-k2k&address=" + value;
+        String url = "https://api.opencagedata.com/geocode/v1/json?q="+value+"&key=3b4c0949431646d2a72538c0bc1c6d07";
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(url, new TextHttpResponseHandler() {
             @Override
@@ -147,6 +131,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void showLocationOnMAp(String responseString) {
+        Gson gson = new Gson();
+        AddressModel addressModel = gson.fromJson(responseString,AddressModel.class);
+
+        if (addressModel.getStatus().getMessage().equals("OK")){
+
+            double lat = addressModel.getResults().
+                    get(0).getGeometry().getLat();
+            double lon = addressModel.getResults().
+                    get(0).getGeometry().getLng();
+
+            LatLng point = new LatLng(lat,lon);
+            CameraUpdate location = CameraUpdateFactory.newLatLngZoom(point,15);
+            mMap.animateCamera(location);
+
+        }else {
+            Toast.makeText(MapsActivity.this, "Address Not Found !", Toast.LENGTH_LONG).show();
+            Log.e("StatusCode:", String.valueOf(addressModel.getStatus().getCode()));
+        }
+
     }
 
     @Override
@@ -155,8 +158,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
-
-        //  mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
 
         getPermissions();
 
@@ -205,9 +206,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Dexter.withActivity(this)
                 .withPermissions(
                         Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-
-
+                        Manifest.permission.ACCESS_COARSE_LOCATION,LOCATION_SERVICE
                 ).withListener(new MultiplePermissionsListener() {
 
             @Override
@@ -217,7 +216,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-
+                getMyLocation();
             }
         }).check();
     }
