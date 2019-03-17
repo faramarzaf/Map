@@ -21,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.internal.IGoogleMapDelegate;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -28,8 +29,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.movessample.addressModels.AddressModel;
-import com.google.movessample.models.MyModel;
-import com.google.movessample.models.OpenWeatherMapModel;
+import com.google.movessample.models.ApixuWeatherModel;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -38,8 +38,6 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -51,7 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
 
-    TextView location, device_time, region_time,region_temp;
+    TextView location, device_time, region_time, region_temp;
     EditText search_location;
     Button btn_go;
     ImageView nightMood, dayMood;
@@ -61,9 +59,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Date currentTime = Calendar.getInstance().getTime();
     // String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
 
-    Calendar calender = Calendar.getInstance();
-    SimpleDateFormat mdformat = new SimpleDateFormat("HH:mm:ss");
-    String strDate = "Current Time : " + mdformat.format(calender.getTime());
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -74,16 +69,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        location = findViewById(R.id.location);
-        search_location = findViewById(R.id.search_location);
-        btn_go = findViewById(R.id.btn_go);
-        device_time = findViewById(R.id.device_time);
-        region_time = findViewById(R.id.region_time);
-        nightMood = findViewById(R.id.nightMood);
-        dayMood = findViewById(R.id.dayMood);
-        region_temp = findViewById(R.id.region_temp);
-        device_time.setText(strDate);
+        bind();
+        device_time.setText("");
         getPermissions();
+
         btn_go.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -94,6 +83,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         nightMood.setOnClickListener(this);
         dayMood.setOnClickListener(this);
+    }
+
+    void bind() {
+        location = findViewById(R.id.location);
+        search_location = findViewById(R.id.search_location);
+        btn_go = findViewById(R.id.btn_go);
+        device_time = findViewById(R.id.device_time);
+        region_time = findViewById(R.id.region_time);
+        nightMood = findViewById(R.id.nightMood);
+        dayMood = findViewById(R.id.dayMood);
+        region_temp = findViewById(R.id.region_temp);
     }
 
     @Override
@@ -114,12 +114,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void searchLocation(String value) {
-        String url = "https://api.opencagedata.com/geocode/v1/json?q="+value+"&key=3b4c0949431646d2a72538c0bc1c6d07";
+        String url = "https://api.opencagedata.com/geocode/v1/json?q=" + value + "&key=3b4c0949431646d2a72538c0bc1c6d07";
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(url, new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
@@ -132,21 +132,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void showLocationOnMAp(String responseString) {
         Gson gson = new Gson();
-        AddressModel addressModel = gson.fromJson(responseString,AddressModel.class);
+        AddressModel addressModel = gson.fromJson(responseString, AddressModel.class);
 
-        if (addressModel.getStatus().getMessage().equals("OK")){
+        if (addressModel.getStatus().getMessage().equals("OK")) {
 
             double lat = addressModel.getResults().
                     get(0).getGeometry().getLat();
             double lon = addressModel.getResults().
                     get(0).getGeometry().getLng();
 
-            LatLng point = new LatLng(lat,lon);
-            CameraUpdate location = CameraUpdateFactory.newLatLngZoom(point,15);
+            LatLng point = new LatLng(lat, lon);
+            CameraUpdate location = CameraUpdateFactory.newLatLngZoom(point, 15);
             mMap.animateCamera(location);
 
-        }else {
-            Toast.makeText(MapsActivity.this, "Address Not Found !", Toast.LENGTH_LONG).show();
+        } else {
+         Toast.makeText(MapsActivity.this, "Address Not Found !", Toast.LENGTH_LONG).show();
             Log.e("StatusCode:", String.valueOf(addressModel.getStatus().getCode()));
         }
 
@@ -156,9 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
-
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map));
-
         getPermissions();
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
@@ -169,11 +167,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //    location.setText(lat + " " + lon);
                 location.setText(getCompleteAddressString(lat, lon));
                 setRegionTime(lat, lon);
-                showTemp(lat,lon);
+                showTemp(lat, lon);
             }
         });
 
     }
+
 
     void getMyLocation() {
         SmartLocation.with(this).location()
@@ -206,7 +205,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Dexter.withActivity(this)
                 .withPermissions(
                         Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,LOCATION_SERVICE
+                        Manifest.permission.ACCESS_COARSE_LOCATION, LOCATION_SERVICE
                 ).withListener(new MultiplePermissionsListener() {
 
             @Override
@@ -244,17 +243,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return strAdd;
 
-
     }
 
+    //https://api.apixu.com/v1/current.json?key=c4662836cc5848bfa8784116190903&q=35,50
     public void setRegionTime(double lat, double lon) {
 
         AsyncHttpClient client = new AsyncHttpClient();
-        String url = "https://api.ipdata.co/?api-key=69a19e7f47d06441547a1b0fed5d2a7880a4b36c7108444d7ac30250";
+        String url = "https://api.apixu.com/v1/current.json?key=c4662836cc5848bfa8784116190903&q=" + lat + "," + lon;
         client.get(url, new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(MapsActivity.this, "Error in get time", Toast.LENGTH_LONG).show();
+
             }
 
             @Override
@@ -262,29 +261,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 showData(responseString);
             }
 
-
         });
-
 
     }
 
     private void showData(String responseString) {
         Gson gson = new Gson();
-        MyModel myModel = gson.fromJson(responseString, MyModel.class);
-        String regTime = myModel.getTimeZone().getCurrentTime();
-        region_time.setText(regTime);
+        ApixuWeatherModel apixuWeatherModel = gson.fromJson(responseString, ApixuWeatherModel.class);
+        String regTime = apixuWeatherModel.getLocation().getLocaltime();
+        region_time.setText("Local time :" + regTime);
 
     }
 
-    //https://api.openweathermap.org/data/2.5/weather?lat=40&lon=50&appid=a5f06f7985166354304befe85a386554
+    // https://api.apixu.com/v1/current.json?key=c4662836cc5848bfa8784116190903&q=35,50
 
-    private void showTemp(final double lat , double lon) {
-        String url = "https://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid=a5f06f7985166354304befe85a386554";
+    private void showTemp(final double lat, double lon) {
+        String url = "https://api.apixu.com/v1/current.json?key=c4662836cc5848bfa8784116190903&q=" + lat + "," + lon;
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(url, new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-             Toast.makeText(MapsActivity.this, "Data Not Found !", Toast.LENGTH_LONG).show();
+
 
             }
 
@@ -298,12 +295,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void parseData(String response) {
         Gson gson = new Gson();
-        OpenWeatherMapModel openWeatherMapModel = gson.fromJson(response, OpenWeatherMapModel.class);
-        Double TempKlv = openWeatherMapModel.getMain().getTemp();
-        Double TempC = (TempKlv) - 273.15;
-        String TempC2 = String.format("%.0f", TempC);
-        region_temp.setText("Here is "+TempC2+" °C");
+        ApixuWeatherModel apixuWeatherModel = gson.fromJson(response, ApixuWeatherModel.class);
+        Double TempC1 = apixuWeatherModel.getCurrent().getTempC();
+        String TempC2 = String.format("%.0f", TempC1);
+        region_temp.setText("Here is " + TempC2 + " °C");
     }
-
 
 }
