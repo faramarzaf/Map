@@ -38,6 +38,8 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -56,8 +58,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // api key for getting  lat lon address  =https://api.opencagedata.com/geocode/v1/json?q=PLACENAME&key=3b4c0949431646d2a72538c0bc1c6d07
 
-    // Date currentTime = Calendar.getInstance().getTime();
-    // String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
+
+    String mydate = java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -70,14 +72,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         bind();
-        device_time.setText("");
+        device_time.setText("Device time : "+mydate);
         getPermissions();
 
         btn_go.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String value = search_location.getText().toString().trim();
-                searchLocation(value);
+                if (search_location.length()!=0){
+                    String value = search_location.getText().toString().trim();
+                    searchLocation(value);
+                }else {
+                    search_location.setError("Enter address");
+                }
+
             }
         });
 
@@ -102,6 +109,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             case R.id.nightMood:
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.night));
                 search_location.setHintTextColor(Color.rgb(255, 255, 255));
+                location.setTextColor(Color.rgb(255,255,255));
                 break;
 
             case R.id.dayMood:
@@ -109,8 +117,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 search_location.setHintTextColor(Color.rgb(0, 0, 0));
                 break;
         }
-
-
     }
 
     private void searchLocation(String value) {
@@ -146,7 +152,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.animateCamera(location);
 
         } else {
-         Toast.makeText(MapsActivity.this, "Address Not Found !", Toast.LENGTH_LONG).show();
+            Toast.makeText(MapsActivity.this, "Address Not Found !", Toast.LENGTH_LONG).show();
             Log.e("StatusCode:", String.valueOf(addressModel.getStatus().getCode()));
         }
 
